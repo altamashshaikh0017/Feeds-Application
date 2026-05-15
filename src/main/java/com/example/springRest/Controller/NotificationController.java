@@ -35,7 +35,7 @@ public class NotificationController {
     public String viewNotifications(Model model, Principal principal) {
         Admin user = adminService.findByUsername(principal.getName());
         List<Notification> notifications = notificationService.getNotifications(user);
-        notificationService.markAllRead(user);
+        notificationService.markAllRead(user); // resets bell badge, keeps list visible
         model.addAttribute("notifications", notifications);
         model.addAttribute("loggedInUser",  user);
         return "notifications";
@@ -44,7 +44,7 @@ public class NotificationController {
     @PostMapping("/notifications/markAllRead")
     public String markAllRead(Principal principal) {
         Admin user = adminService.findByUsername(principal.getName());
-        notificationService.markAllRead(user);
+        notificationService.clearAll(user);
         return "redirect:/notifications";
     }
 

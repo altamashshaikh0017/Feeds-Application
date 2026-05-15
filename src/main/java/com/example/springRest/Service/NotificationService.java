@@ -67,6 +67,13 @@ public class NotificationService {
         List<Notification> unread = notificationRepository.findByRecipientAndReadFalseOrderByCreatedAtDesc(user);
         unread.forEach(n -> n.setRead(true));
         notificationRepository.saveAll(unread);
+        sseService.sendNotificationCount(user.getUserName(), 0);
+    }
+
+    @Transactional
+    public void clearAll(Admin user) {
+        notificationRepository.deleteAllByRecipient(user);
+        sseService.sendNotificationCount(user.getUserName(), 0);
     }
 
     @Transactional
