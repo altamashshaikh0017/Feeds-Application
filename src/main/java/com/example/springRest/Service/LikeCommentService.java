@@ -16,6 +16,7 @@ import com.example.springRest.Repository.AdminRepository;
 import com.example.springRest.Repository.PostCommentRepository;
 import com.example.springRest.Repository.PostLikeRepository;
 import com.example.springRest.Repository.PostRepository;
+import org.springframework.context.annotation.Lazy;
 
 @Service
 public class LikeCommentService {
@@ -32,6 +33,9 @@ public class LikeCommentService {
 	@Autowired
 	private PostCommentRepository postCommentRepository;
 
+	@Autowired @Lazy
+	private NotificationService notificationService;
+
 	@Transactional
 	public void toggleLike(Long postId, String userName) {
 		Post post   = postRepository.findById(postId).orElseThrow();
@@ -46,6 +50,7 @@ public class LikeCommentService {
 			like.setLikedBy(admin);
 			like.setLikedAt(LocalDateTime.now());
 			postLikeRepository.save(like);
+			notificationService.notifyLike(post, admin);
 		}
 	}
 
@@ -61,6 +66,7 @@ public class LikeCommentService {
 		comment.setContent(content.trim());
 		comment.setCommentedAt(LocalDateTime.now());
 		postCommentRepository.save(comment);
+		notificationService.notifyComment(post, admin, content.trim());
 	}
 
 	@Transactional
