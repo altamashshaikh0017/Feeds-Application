@@ -37,4 +37,8 @@
   - Java 17+
   - Maven 3.8+
   - A free [Cloudinary] account
-  - A Gmail account with an app password enabled
+  - A Gmail account with an app password enabled<img width="1140" height="576" alt="SS4" src="https://github.com/user-attachments/assets/3e82964c-dee4-40a7-9987-4480073c8d14" />
+<img width="779" height="532" alt="SS3" src="https://github.com/user-attachments/assets/f6b7cce6-01e7-48a1-9cc6-67109e1cffbe" />
+<img width="1262" height="583" alt="SS2" src="https://github.com/user-attachments/assets/ea97bd51-f8a4-4cb9-8c1d-2b2cca57f9f1" />
+<img width="1211" height="618" alt="SS1" src="https://github.com/user-attachments/assets/23da577d-c245-4bf6-8f34-8463d82273a0" />
+
