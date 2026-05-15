@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home — SpringFeeds</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: #0a0a1a;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* ── Animated gradient background ── */
+        .bg-gradient {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(-45deg, #0d0d2b, #1a103c, #0d1f3c, #0a1628);
+            background-size: 400% 400%;
+            animation: gradientShift 18s ease infinite;
+            z-index: 0;
+        }
+
+        @keyframes gradientShift {
+            0%   { background-position: 0%   50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0%   50%; }
+        }
+
+        /* ── Floating ambient blobs ── */
+        .blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.18;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .blob-1 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, #6366f1, transparent);
+            top: -100px; left: -100px;
+            animation: floatBlob 10s ease-in-out infinite;
+        }
+        .blob-2 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, #8b5cf6, transparent);
+            bottom: -80px; right: -80px;
+            animation: floatBlob 13s ease-in-out infinite reverse;
+        }
+        .blob-3 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, #06b6d4, transparent);
+            top: 40%; left: 50%;
+            animation: floatBlob 9s ease-in-out infinite 2s;
+        }
+
+        @keyframes floatBlob {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33%       { transform: translate(30px, -40px) scale(1.05); }
+            66%       { transform: translate(-20px, 20px) scale(0.97); }
+        }
+
+        /* ── Grid dot pattern overlay ── */
+        .dot-pattern {
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 32px 32px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ── Page wrapper ── */
+        .page-wrapper {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Navbar ── */
+        .top-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 40px;
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .nav-brand-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+        }
+        .nav-brand-name {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            letter-spacing: -0.3px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50px;
+            padding: 6px 16px 6px 6px;
+        }
+        .nav-avatar {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700; color: white;
+            text-transform: uppercase;
+        }
+        .nav-username {
+            font-size: 14px;
+            font-weight: 500;
+            color: #cbd5e1;
+        }
+        .btn-logout-nav {
+            display: flex; align-items: center; gap: 6px;
+            background: rgba(239,68,68,0.15);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #fca5a5;
+            border-radius: 50px;
+            padding: 7px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-logout-nav:hover {
+            background: rgba(239,68,68,0.3);
+            color: #fecaca;
+            border-color: rgba(239,68,68,0.5);
+        }
+
+        /* ── Hero ── */
+        .hero {
+            text-align: center;
+            padding: 72px 20px 52px;
+        }
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(99,102,241,0.15);
+            border: 1px solid rgba(99,102,241,0.35);
+            border-radius: 50px;
+            padding: 5px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #a5b4fc;
+            margin-bottom: 24px;
+            letter-spacing: 0.3px;
+        }
+        .hero-title {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            color: #f8fafc;
+            line-height: 1.15;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+        }
+        .hero-title .accent {
+            background: linear-gradient(90deg, #818cf8, #a78bfa, #67e8f9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-subtitle {
+            font-size: 1.05rem;
+            color: #94a3b8;
+            font-weight: 400;
+            max-width: 420px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* ── Cards grid ── */
+        .cards-section {
+            padding: 0 24px 80px;
+        }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* ── Feature card ── */
+        .feature-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.09);
+            border-radius: 20px;
+            padding: 32px 26px 28px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease, background 0.28s ease;
+            animation: fadeInUp 0.5s ease both;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            background: rgba(255,255,255,0.09);
+            border-color: rgba(255,255,255,0.18);
+            box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+            color: #f1f5f9;
+        }
+        .feature-card:hover::before { opacity: 1; }
+
+        /* Card-specific hover glow */
+        .card-create:hover  { box-shadow: 0 24px 64px rgba(99,102,241,0.25); }
+        .card-posts:hover   { box-shadow: 0 24px 64px rgba(16,185,129,0.25); }
+        .card-feed:hover    { box-shadow: 0 24px 64px rgba(139,92,246,0.25); }
+        .card-profile:hover { box-shadow: 0 24px 64px rgba(245,158,11,0.25); }
+        .card-admin:hover   { box-shadow: 0 24px 64px rgba(239,68,68,0.25); }
+
+        /* Top accent line */
+        .feature-card .card-accent {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            border-radius: 20px 20px 0 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .feature-card:hover .card-accent { opacity: 1; }
+        .card-create  .card-accent { background: linear-gradient(90deg, #6366f1, #818cf8); }
+        .card-posts   .card-accent { background: linear-gradient(90deg, #10b981, #34d399); }
+        .card-feed    .card-accent { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+        .card-profile .card-accent { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .card-admin   .card-accent { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+        /* Icon badge */
+        .card-icon-badge {
+            width: 58px; height: 58px;
+            border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px;
+            margin-bottom: 22px;
+            flex-shrink: 0;
+        }
+        .icon-create  { background: linear-gradient(135deg, #4f46e5, #6366f1); box-shadow: 0 8px 24px rgba(99,102,241,0.4); }
+        .icon-posts   { background: linear-gradient(135deg, #059669, #10b981); box-shadow: 0 8px 24px rgba(16,185,129,0.4); }
+        .icon-feed    { background: linear-gradient(135deg, #7c3aed, #8b5cf6); box-shadow: 0 8px 24px rgba(139,92,246,0.4); }
+        .icon-profile { background: linear-gradient(135deg, #d97706, #f59e0b); box-shadow: 0 8px 24px rgba(245,158,11,0.4); }
+        .icon-admin   { background: linear-gradient(135deg, #dc2626, #ef4444); box-shadow: 0 8px 24px rgba(239,68,68,0.4); }
+
+        .card-title-text {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 8px;
+            letter-spacing: -0.2px;
+        }
+        .card-desc {
+            font-size: 0.875rem;
+            color: #94a3b8;
+            line-height: 1.55;
+            flex: 1;
+            margin-bottom: 24px;
+        }
+        .card-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 50px;
+            padding: 8px 20px;
+            border: 1px solid;
+            transition: all 0.2s;
+            text-decoration: none;
+            align-self: flex-start;
+        }
+        .cta-create  { color: #818cf8; border-color: rgba(99,102,241,0.4);  background: rgba(99,102,241,0.1); }
+        .cta-posts   { color: #34d399; border-color: rgba(16,185,129,0.4);  background: rgba(16,185,129,0.1); }
+        .cta-feed    { color: #c4b5fd; border-color: rgba(139,92,246,0.4);  background: rgba(139,92,246,0.1); }
+        .cta-profile { color: #fbbf24; border-color: rgba(245,158,11,0.4);  background: rgba(245,158,11,0.1); }
+        .cta-admin   { color: #f87171; border-color: rgba(239,68,68,0.4);   background: rgba(239,68,68,0.1); }
+
+        .cta-create:hover  { background: rgba(99,102,241,0.25);  color: #a5b4fc; }
+        .cta-posts:hover   { background: rgba(16,185,129,0.25);  color: #6ee7b7; }
+        .cta-feed:hover    { background: rgba(139,92,246,0.25);  color: #ddd6fe; }
+        .cta-profile:hover { background: rgba(245,158,11,0.25);  color: #fde68a; }
+        .cta-admin:hover   { background: rgba(239,68,68,0.25);   color: #fca5a5; }
+
+        /* ── Admin row (centered single card) ── */
+        .admin-row {
+            max-width: 1100px;
+            margin: 20px auto 0;
+            padding: 0 24px;
+        }
+        .admin-card-wide {
+            flex-direction: row;
+            align-items: center;
+            padding: 26px 32px;
+            gap: 24px;
+        }
+        .admin-card-wide .card-icon-badge { margin-bottom: 0; flex-shrink: 0; }
+        .admin-card-wide .card-body-text { flex: 1; }
+        .admin-card-wide .card-cta { align-self: center; white-space: nowrap; }
+
+        /* ── Stagger animation ── */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(28px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .d1 { animation-delay: 0.05s; }
+        .d2 { animation-delay: 0.13s; }
+        .d3 { animation-delay: 0.21s; }
+        .d4 { animation-delay: 0.29s; }
+        .d5 { animation-delay: 0.37s; }
+
+        /* ── Footer ── */
+        .page-footer {
+            margin-top: auto;
+            padding: 20px 40px;
+            text-align: center;
+            font-size: 13px;
+            color: #475569;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .top-nav { padding: 14px 20px; }
+            .nav-username { display: none; }
+            .hero { padding: 52px 16px 36px; }
+            .cards-section { padding: 0 16px 60px; }
+            .admin-card-wide { flex-direction: column; text-align: center; }
+            .admin-card-wide .card-cta { align-self: center; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Background layers -->
+<div class="bg-gradient"></div>
+<div class="dot-pattern"></div>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<div class="page-wrapper">
+
+    <!-- ── Navbar ── -->
+    <nav class="top-nav">
+        <a href="/home" class="nav-brand">
+            <div class="nav-brand-icon">🌱</div>
+            <span class="nav-brand-name">SpringFeeds</span>
+        </a>
+
+        <div class="nav-right">
+            <div class="nav-user">
+                <div class="nav-avatar"
+                     th:text="${#strings.toUpperCase(#strings.substring(userName, 0, 1))}">U</div>
+                <span class="nav-username" th:text="${userName}">username</span>
+            </div>
+            <a href="/logout" class="btn-logout-nav">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                     viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Sign Out
+            </a>
+        </div>
+    </nav>
+
+    <!-- ── Hero ── -->
+    <section class="hero">
+        <div class="hero-eyebrow">
+            <span>✨</span> Your personal feed, powered by Spring
+        </div>
+        <h1 class="hero-title">
+            Welcome back,<br>
+            <span class="accent" th:text="${userName}">User</span>!
+        </h1>
+        <p class="hero-subtitle">
+            Share ideas, explore others' posts, and manage your presence — all in one place.
+        </p>
+    </section>
+
+    <!-- ── Feature cards ── -->
+    <section class="cards-section">
+        <div class="cards-grid">
+
+            <!-- Create Post -->
+            <a th:href="@{/createPost}" class="feature-card card-create d1">
+                <div class="card-accent"></div>
+                <div class="card-icon-badge icon-create">✍️</div>
+                <div class="card-title-text">Create Post</div>
+                <p class="card-desc">Compose rich posts with formatted text, headings, lists, and a cover image.</p>
+                <span class="card-cta cta-create">Start writing →</span>
+            </a>
+
+            <!-- My Posts -->
+            <a th:href="@{/viewPosts}" class="feature-card card-posts d2">
+                <div class="card-accent"></div>
+                <div class="card-icon-badge icon-posts">📋</div>
+                <div class="card-title-text">My Posts</div>
+                <p class="card-desc">Review, edit, and track the status of all your published and pending posts.</p>
+                <span class="card-cta cta-posts">View posts →</span>
+            </a>
+
+            <!-- Explore Feed -->
+            <a th:href="@{/viewOtherUsersPosts}" class="feature-card card-feed d3">
+                <div class="card-accent"></div>
+                <div class="card-icon-badge icon-feed">🌐</div>
+                <div class="card-title-text">Explore Feed</div>
+                <p class="card-desc">Discover approved posts from the community. Like and comment to engage.</p>
+                <span class="card-cta cta-feed">Browse feed →</span>
+            </a>
+
+            <!-- My Profile -->
+            <a th:href="@{/profile}" class="feature-card card-profile d4">
+                <div class="card-accent"></div>
+                <div class="card-icon-badge icon-profile">👤</div>
+                <div class="card-title-text">My Profile</div>
+                <p class="card-desc">Update your bio, location, profile picture, and manage your account settings.</p>
+                <span class="card-cta cta-profile">View profile →</span>
+            </a>
+
+        </div>
+
+        <!-- Admin Dashboard — full-width row, admin only -->
+        <div class="admin-row" sec:authorize="hasRole('ADMIN')">
+            <a th:href="@{/admin/dashboard}" class="feature-card card-admin admin-card-wide d5">
+                <div class="card-accent"></div>
+                <div class="card-icon-badge icon-admin">⚙️</div>
+                <div class="card-body-text">
+                    <div class="card-title-text">Admin Dashboard</div>
+                    <p class="card-desc" style="margin-bottom:0;">
+                        Approve or reject posts, manage all users, and monitor platform activity.
+                    </p>
+                </div>
+                <span class="card-cta cta-admin">Open dashboard →</span>
+            </a>
+        </div>
+    </section>
+
+    <!-- ── Footer ── -->
+    <footer class="page-footer">
+        SpringFeeds &nbsp;·&nbsp; Built with Spring Boot &amp; Thymeleaf
+    </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

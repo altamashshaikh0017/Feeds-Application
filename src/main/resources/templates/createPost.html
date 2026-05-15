@@ -2,144 +2,507 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
-<title>Create New Post</title>
-<!--  <link rel="stylesheet" href="CSS/style.css"> -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Post — Feeds</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
 <style>
-/* General Styles */
-body {
-	font-family: Arial, sans-serif;
-	background-color: #f4f4f4;
-	margin: 0;
-	padding: 0;
-}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-h1 {
-	color: #333;
-	text-align: center;
-	margin-top: 20px;
-	margin-bottom: 20px;
-}
+    body {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, #0a0a0f 0%, #0d0d1a 30%, #0a0f1a 60%, #0a0a0f 100%);
+        min-height: 100vh;
+        color: #fff;
+        overflow-x: hidden;
+    }
 
-/* Form Styles */
-form {
-	background-color: #fff;
-	border: 1px solid #ddd;
-	border-radius: 5px;
-	padding: 20px;
-	margin: 20px auto;
-	max-width: 600px;
-	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
+    /* ── Blobs ── */
+    .blob {
+        position: fixed; border-radius: 50%; filter: blur(90px);
+        opacity: 0.16; pointer-events: none; z-index: 0;
+        animation: drift 20s ease-in-out infinite alternate;
+    }
+    .blob-1 { width: 560px; height: 560px; background: #6366f1; top: -150px; left: -150px; animation-delay: 0s; }
+    .blob-2 { width: 400px; height: 400px; background: #8b5cf6; bottom: -110px; right: -110px; animation-delay: -8s; }
+    .blob-3 { width: 280px; height: 280px; background: #06b6d4; top: 40%; left: 55%; animation-delay: -14s; }
+    @keyframes drift {
+        0%   { transform: translate(0, 0) scale(1); }
+        100% { transform: translate(38px, 28px) scale(1.08); }
+    }
 
-/* Header inside forms */
-form h1 {
-	font-size: 24px;
-	color: #007bff;
-	margin-top: 0;
-	margin-bottom: 20px;
-}
+    body::before {
+        content: '';
+        position: fixed; inset: 0; z-index: 0; pointer-events: none;
+        background-image: radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+        background-size: 28px 28px;
+    }
 
-/* Form Elements */
-form label {
-	display: block;
-	margin-bottom: 8px;
-	font-weight: bold;
-}
+    /* ── Navbar ── */
+    .glass-nav {
+        position: sticky; top: 0; z-index: 100;
+        background: rgba(10,10,20,0.78);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+        padding: 0 24px;
+        height: 60px;
+        display: flex; align-items: center; gap: 12px;
+    }
+    .nav-brand {
+        font-size: 1.1rem; font-weight: 800;
+        background: linear-gradient(135deg, #818cf8, #c084fc);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text; text-decoration: none; white-space: nowrap;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .nav-brand-icon {
+        width: 30px; height: 30px; border-radius: 8px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 15px;
+    }
+    .nav-label { font-size: 0.85rem; font-weight: 600; color: rgba(255,255,255,0.4); letter-spacing: 0.3px; }
+    .nav-sep   { color: rgba(255,255,255,0.15); font-size: 1.2rem; }
+    .nav-link-pill {
+        font-size: 0.78rem; font-weight: 600; color: rgba(255,255,255,0.5);
+        text-decoration: none; padding: 5px 12px; border-radius: 20px;
+        border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s; white-space: nowrap;
+    }
+    .nav-link-pill:hover { color: #fff; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+    .nav-spacer { flex: 1; }
+    .user-pill {
+        display: flex; align-items: center; gap: 8px;
+        background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 24px; padding: 4px 12px 4px 4px;
+    }
+    .user-pill-avatar {
+        width: 28px; height: 28px; border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; overflow: hidden;
+    }
+    .user-pill-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .user-pill-name { font-size: 0.78rem; font-weight: 600; color: rgba(255,255,255,0.8); }
+    .btn-logout {
+        font-size: 0.78rem; font-weight: 600; color: rgba(255,100,100,0.8);
+        text-decoration: none; padding: 5px 12px; border-radius: 20px;
+        border: 1px solid rgba(255,100,100,0.2); transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-logout:hover { color: #fff; background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); }
 
-form input[type="text"], form input[type="password"], form input[type="email"],
-	form textarea, form select {
-	width: calc(100% - 22px);
-	padding: 10px;
-	margin-bottom: 10px;
-	border: 1px solid #ddd;
-	border-radius: 4px;
-}
+    /* ── Page wrapper ── */
+    .page-wrapper {
+        position: relative; z-index: 1;
+        max-width: 740px; margin: 0 auto;
+        padding: 40px 20px 70px;
+    }
 
-form button {
-	background-color: #ffa500; /*#007bff;*/
-	color: #fff;
-	border: none;
-	padding: 10px 15px;
-	border-radius: 4px;
-	cursor: pointer;
-}
+    /* ── Page header ── */
+    .page-header { margin-bottom: 28px; }
+    .page-title { font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 4px; }
+    .page-sub   { font-size: 0.82rem; color: rgba(255,255,255,0.38); }
 
-form button:hover {
-	background-color: #0056b3;
-}
+    /* ── Glass card ── */
+    .glass-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.09);
+        backdrop-filter: blur(24px);
+        border-radius: 20px;
+        padding: 32px;
+        animation: fadeUp 0.45s ease both;
+    }
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
 
-/* Links */
-a {
-	color: #007bff;
-	text-decoration: none;
-}
+    /* ── Form labels ── */
+    .form-label {
+        display: block; font-size: 0.78rem; font-weight: 600;
+        color: rgba(255,255,255,0.5); margin-bottom: 7px; letter-spacing: 0.2px;
+    }
+    .form-label .optional {
+        font-weight: 400; color: rgba(255,255,255,0.25); margin-left: 4px;
+    }
 
-a:hover {
-	text-decoration: underline;
-}
+    /* ── Text input ── */
+    .form-input {
+        width: 100%;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 10px;
+        color: #fff; font-size: 0.95rem; font-family: inherit;
+        padding: 12px 15px;
+        outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-input::placeholder { color: rgba(255,255,255,0.2); }
+    .form-input:focus {
+        border-color: rgba(99,102,241,0.6);
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+        background: rgba(255,255,255,0.07);
+    }
 
-/* Container for additional buttons or links */
-div {
-	text-align: center;
-	margin-top: 20px;
-}
+    /* ── Form group spacing ── */
+    .form-group { margin-bottom: 24px; }
 
-.button-container {
-	text-align: center;
-	margin-top: 20px;
-}
+    /* ── Quill dark overrides ── */
+    .ql-wrapper { border-radius: 12px; overflow: hidden; }
 
-.button {
-	display: inline-block;
-	padding: 7px 14px;
-	margin: 5px;
-	font-size: 12px;
-	font-weight: bold;
-	text-align: center;
-	text-decoration: none; /* Removes underline */
-	color: #fff;
-	background-color: #ffa500; /*#007bff; Button background color */
-	border: none; /* Removes border */
-	border-radius: 5px; /* Rounded corners */
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Shadow effect */
-	transition: background-color 0.3s, box-shadow 0.3s;
-	/* Smooth transition for hover effects */
-}
+    .ql-toolbar.ql-snow {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.12) !important;
+        border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+        border-radius: 10px 10px 0 0;
+        padding: 8px 10px;
+    }
+    .ql-container.ql-snow {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.12) !important;
+        border-top: none !important;
+        border-radius: 0 0 10px 10px;
+        font-size: 0.92rem;
+        min-height: 220px;
+    }
+    .ql-editor {
+        min-height: 220px;
+        color: rgba(255,255,255,0.88);
+        line-height: 1.7;
+        padding: 14px 16px;
+    }
+    .ql-editor.ql-blank::before {
+        color: rgba(255,255,255,0.22) !important;
+        font-style: italic;
+    }
+    /* toolbar icons */
+    .ql-toolbar.ql-snow .ql-stroke { stroke: rgba(255,255,255,0.5); }
+    .ql-toolbar.ql-snow .ql-fill   { fill:  rgba(255,255,255,0.5); }
+    .ql-toolbar.ql-snow .ql-picker-label { color: rgba(255,255,255,0.5); }
+    .ql-toolbar.ql-snow .ql-picker-label .ql-stroke { stroke: rgba(255,255,255,0.5); }
+    .ql-toolbar.ql-snow button:hover .ql-stroke,
+    .ql-toolbar.ql-snow .ql-active .ql-stroke { stroke: #818cf8; }
+    .ql-toolbar.ql-snow button:hover .ql-fill,
+    .ql-toolbar.ql-snow .ql-active .ql-fill   { fill:  #818cf8; }
+    .ql-toolbar.ql-snow button:hover,
+    .ql-toolbar.ql-snow .ql-active { color: #818cf8; }
+    .ql-toolbar.ql-snow .ql-picker-options {
+        background: #1c1c2e !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+        border-radius: 8px;
+    }
+    .ql-toolbar.ql-snow .ql-picker-item { color: rgba(255,255,255,0.7); }
+    .ql-toolbar.ql-snow .ql-picker-item:hover { color: #818cf8; }
+    .ql-toolbar.ql-snow .ql-picker-label:hover { color: rgba(255,255,255,0.9); }
+    .ql-snow .ql-tooltip {
+        background: #1c1c2e; color: #fff;
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .ql-snow .ql-tooltip input[type=text] {
+        background: rgba(255,255,255,0.08); color: #fff;
+        border: 1px solid rgba(255,255,255,0.15); border-radius: 6px;
+    }
+    .ql-snow .ql-tooltip a.ql-action,
+    .ql-snow .ql-tooltip a.ql-remove { color: #818cf8; }
 
-.button:hover {
-	background-color: #0056b3; /*Darker background on hover */
-	box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-	/* Enhanced shadow on hover */
-}
+    /* ── Upload zone ── */
+    .upload-zone {
+        border: 1.5px dashed rgba(255,255,255,0.15);
+        border-radius: 12px;
+        background: rgba(255,255,255,0.03);
+        padding: 22px 18px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s;
+        position: relative;
+    }
+    .upload-zone:hover, .upload-zone.drag-over {
+        border-color: rgba(99,102,241,0.5);
+        background: rgba(99,102,241,0.05);
+    }
+    .upload-zone input[type="file"] {
+        position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-icon { font-size: 1.8rem; margin-bottom: 8px; }
+    .upload-text { font-size: 0.82rem; color: rgba(255,255,255,0.45); }
+    .upload-text strong { color: #818cf8; }
+    .upload-hint { font-size: 0.72rem; color: rgba(255,255,255,0.25); margin-top: 4px; }
 
-.button:active {
-	background-color: #004494; /* Even darker background when clicked */
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Reduced shadow on click */
-}
+    /* ── Image preview ── */
+    .preview-wrap {
+        display: none; margin-top: 14px; position: relative;
+        border-radius: 10px; overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    .preview-wrap img {
+        width: 100%; max-height: 220px; object-fit: cover; display: block;
+    }
+    .preview-remove {
+        position: absolute; top: 8px; right: 8px;
+        background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.15);
+        color: #fff; border-radius: 6px; font-size: 0.72rem; font-weight: 600;
+        padding: 4px 10px; cursor: pointer; backdrop-filter: blur(6px);
+        transition: background 0.2s;
+    }
+    .preview-remove:hover { background: rgba(239,68,68,0.4); }
 
-textarea {
-	height: 100px;
-	resize: vertical;
-}
+    /* ── Divider ── */
+    .form-divider { border: none; border-top: 1px solid rgba(255,255,255,0.07); margin: 28px 0; }
+
+    /* ── Actions row ── */
+    .actions-row { display: flex; gap: 12px; align-items: center; }
+
+    /* ── Submit button ── */
+    .btn-submit {
+        flex: 1;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: #fff; border: none; font-weight: 700; font-size: 0.9rem;
+        font-family: inherit; border-radius: 12px;
+        padding: 13px 24px; cursor: pointer; letter-spacing: 0.3px;
+        box-shadow: 0 4px 18px rgba(99,102,241,0.35);
+        transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-submit:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 24px rgba(99,102,241,0.45); }
+    .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+    .btn-cancel {
+        font-size: 0.82rem; font-weight: 600; color: rgba(255,255,255,0.45);
+        text-decoration: none; padding: 13px 20px; border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-cancel:hover { color: #fff; background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2); }
+
+    /* btn spinner */
+    .btn-spinner {
+        display: none; width: 16px; height: 16px;
+        border: 2px solid rgba(255,255,255,0.35);
+        border-top-color: #fff; border-radius: 50%;
+        animation: spin 0.7s linear infinite; flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Full-page loader overlay ── */
+    .loader-overlay {
+        display: none;
+        position: fixed; inset: 0; z-index: 9999;
+        background: rgba(5,5,15,0.82);
+        backdrop-filter: blur(8px);
+        align-items: center; justify-content: center; flex-direction: column; gap: 20px;
+    }
+    .loader-overlay.active { display: flex; }
+
+    .loader-ring {
+        width: 64px; height: 64px; position: relative;
+    }
+    .loader-ring svg {
+        width: 100%; height: 100%; animation: spin 1.2s linear infinite;
+    }
+    .loader-ring circle {
+        fill: none; stroke-width: 4;
+        stroke-linecap: round;
+        stroke-dasharray: 150;
+        stroke-dashoffset: 50;
+    }
+    .loader-ring .track  { stroke: rgba(255,255,255,0.08); stroke-dasharray: none; }
+    .loader-ring .head   { stroke: url(#grad); }
+
+    .loader-text-wrap { text-align: center; }
+    .loader-title { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
+    .loader-sub   { font-size: 0.78rem; color: rgba(255,255,255,0.4); }
+    .loader-dots::after {
+        content: ''; animation: dots 1.4s steps(4, end) infinite;
+    }
+    @keyframes dots {
+        0%   { content: ''; }
+        25%  { content: '.'; }
+        50%  { content: '..'; }
+        75%  { content: '...'; }
+        100% { content: ''; }
+    }
 </style>
 </head>
 <body>
-	<h1>Create a New Post</h1>
-	<form action="/createPost" method="post" th:object="${post}">
 
-		<label for="title">Title:</label> <input type="text" id="title"
-			name="title" th:field="*{title}" required> <label
-			for="content">Post Content:</label>
-		<textarea id="content" name="content" th:field="*{content}" required></textarea>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
 
-		<button type="submit">Create Post</button>
-	</form>
+<!-- ── Full-page loader ── -->
+<div class="loader-overlay" id="loaderOverlay">
+    <div class="loader-ring">
+        <svg viewBox="0 0 64 64">
+            <defs>
+                <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%"   stop-color="#6366f1"/>
+                    <stop offset="100%" stop-color="#c084fc"/>
+                </linearGradient>
+            </defs>
+            <circle class="track" cx="32" cy="32" r="28"/>
+            <circle class="head"  cx="32" cy="32" r="28" stroke-dasharray="120 200" stroke-dashoffset="30"/>
+        </svg>
+    </div>
+    <div class="loader-text-wrap">
+        <div class="loader-title" id="loaderTitle">Publishing your post<span class="loader-dots"></span></div>
+        <div class="loader-sub"   id="loaderSub">This may take a moment if you attached an image</div>
+    </div>
+</div>
 
-	<div class="button-container">
-		<a href="/viewPosts" class="button">View Posts </a>
-		 <a href="/viewOtherUsersPosts"class="button">View Other User's Posts</a>
-	</div>
-	<a href="/createPost" class="button">Create a new post</a>
-    <a href="/logout" class="button">Logout</a>
+<!-- ── Navbar ── -->
+<nav class="glass-nav">
+    <a href="/home" class="nav-brand">
+        <div class="nav-brand-icon">✦</div>
+        Feeds
+    </a>
+    <span class="nav-sep">/</span>
+    <span class="nav-label">New Post</span>
+
+    <div class="nav-spacer"></div>
+
+    <a href="/home"      class="nav-link-pill">Home</a>
+    <a href="/viewPosts" class="nav-link-pill">My Posts</a>
+    <a href="/viewOtherUsersPosts" class="nav-link-pill">Explore</a>
+
+    <div class="user-pill">
+        <div class="user-pill-avatar">
+            <img th:if="${currentUser.profilePictureUrl != null and !#strings.isEmpty(currentUser.profilePictureUrl)}"
+                 th:src="${currentUser.profilePictureUrl}" alt="avatar" />
+            <span th:if="${currentUser.profilePictureUrl == null or #strings.isEmpty(currentUser.profilePictureUrl)}"
+                  th:text="${#strings.substring(currentUser.name, 0, 1)}">U</span>
+        </div>
+        <span class="user-pill-name" th:text="${currentUser.name}">User</span>
+    </div>
+
+    <a href="/logout" class="btn-logout">Sign out</a>
+</nav>
+
+<!-- ── Page content ── -->
+<div class="page-wrapper">
+
+    <div class="page-header">
+        <div class="page-title">Create a new post</div>
+        <div class="page-sub">Share your thoughts with the community</div>
+    </div>
+
+    <div class="glass-card">
+        <form action="/createPost" method="post" enctype="multipart/form-data"
+              th:object="${post}" id="createPostForm">
+
+            <!-- Title -->
+            <div class="form-group">
+                <label class="form-label">Title</label>
+                <input type="text" th:field="*{title}" class="form-input"
+                       placeholder="Give your post a compelling title…" required />
+            </div>
+
+            <!-- Content (Quill) -->
+            <div class="form-group">
+                <label class="form-label">Content</label>
+                <input type="hidden" id="content" name="content" />
+                <div class="ql-wrapper">
+                    <div id="quill-editor"></div>
+                </div>
+            </div>
+
+            <!-- Cover image -->
+            <div class="form-group">
+                <label class="form-label">Cover Image <span class="optional">(optional)</span></label>
+                <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="coverImage" name="coverImage"
+                           accept="image/png,image/jpeg,image/gif,image/webp"
+                           onchange="handleImage(event)" />
+                    <div class="upload-icon">&#128247;</div>
+                    <div class="upload-text"><strong>Click to upload</strong> or drag &amp; drop</div>
+                    <div class="upload-hint">PNG, JPG, GIF, WEBP &middot; max 10 MB</div>
+                </div>
+                <div class="preview-wrap" id="previewWrap">
+                    <img id="imagePreview" src="#" alt="Preview" />
+                    <button type="button" class="preview-remove" onclick="removeImage()">&#10005; Remove</button>
+                </div>
+            </div>
+
+            <hr class="form-divider" />
+
+            <!-- Actions -->
+            <div class="actions-row">
+                <a href="/viewPosts" class="btn-cancel">Cancel</a>
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <span class="btn-spinner" id="btnSpinner"></span>
+                    <span id="btnText">Publish Post</span>
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script>
+    /* ── Quill setup ── */
+    const quill = new Quill('#quill-editor', {
+        theme: 'snow',
+        placeholder: 'Write something worth sharing…',
+        modules: {
+            toolbar: [
+                [{ header: [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ color: [] }, { background: [] }],
+                [{ list: 'ordered' }, { list: 'bullet' }],
+                ['blockquote', 'code-block'],
+                ['link'],
+                ['clean']
+            ]
+        }
+    });
+
+    /* ── Image handling ── */
+    let hasImage = false;
+
+    function handleImage(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        hasImage = true;
+        const wrap = document.getElementById('previewWrap');
+        const img  = document.getElementById('imagePreview');
+        img.src = URL.createObjectURL(file);
+        wrap.style.display = 'block';
+        document.getElementById('uploadZone').style.display = 'none';
+    }
+
+    function removeImage() {
+        hasImage = false;
+        document.getElementById('coverImage').value = '';
+        document.getElementById('previewWrap').style.display = 'none';
+        document.getElementById('uploadZone').style.display  = 'block';
+        document.getElementById('imagePreview').src = '#';
+    }
+
+    /* drag-over highlight */
+    const zone = document.getElementById('uploadZone');
+    zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', ()  => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop',      e  => { e.preventDefault(); zone.classList.remove('drag-over'); });
+
+    /* ── Form submit with loader ── */
+    document.getElementById('createPostForm').addEventListener('submit', function (e) {
+        /* copy Quill HTML into hidden input */
+        document.getElementById('content').value = quill.root.innerHTML;
+
+        /* show loader */
+        const overlay  = document.getElementById('loaderOverlay');
+        const spinner  = document.getElementById('btnSpinner');
+        const btnText  = document.getElementById('btnText');
+        const submitBtn = document.getElementById('submitBtn');
+        const loaderSub = document.getElementById('loaderSub');
+
+        overlay.classList.add('active');
+        spinner.style.display = 'block';
+        btnText.textContent   = 'Publishing…';
+        submitBtn.disabled    = true;
+
+        if (!hasImage) {
+            loaderSub.textContent = 'Saving your post to the feed…';
+        }
+    });
+</script>
 </body>
 </html>

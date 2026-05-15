@@ -13,5 +13,6 @@ public class PostReq {
 	private String content;
 	private Admin author;
 	private Date createdDate;
-	private Boolean approved;
+	private String status;
+	private String coverImageUrl;
 }

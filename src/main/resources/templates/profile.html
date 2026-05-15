@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title th:text="|${profileUser.name}'s Profile — SpringFeeds|">Profile</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        min-height: 100vh;
+        background: #0a0a1a;
+        color: #e2e8f0;
+        overflow-x: hidden;
+    }
+
+    /* ── Background ── */
+    .bg-gradient {
+        position: fixed; inset: 0;
+        background: linear-gradient(-45deg, #0d0d2b, #1a103c, #0d1f3c, #0a1628);
+        background-size: 400% 400%;
+        animation: gradientShift 18s ease infinite;
+        z-index: 0;
+    }
+    @keyframes gradientShift {
+        0%   { background-position: 0%   50%; }
+        50%  { background-position: 100% 50%; }
+        100% { background-position: 0%   50%; }
+    }
+    .dot-pattern {
+        position: fixed; inset: 0;
+        background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+        background-size: 32px 32px;
+        z-index: 0; pointer-events: none;
+    }
+    .blob {
+        position: fixed; border-radius: 50%;
+        filter: blur(90px); opacity: 0.14; pointer-events: none; z-index: 0;
+    }
+    .blob-1 { width: 450px; height: 450px; background: radial-gradient(circle, #6366f1, transparent); top: -80px; left: -80px; animation: floatBlob 11s ease-in-out infinite; }
+    .blob-2 { width: 350px; height: 350px; background: radial-gradient(circle, #8b5cf6, transparent); bottom: -60px; right: -60px; animation: floatBlob 14s ease-in-out infinite reverse; }
+    .blob-3 { width: 280px; height: 280px; background: radial-gradient(circle, #06b6d4, transparent); top: 50%; left: 55%; animation: floatBlob 9s ease-in-out infinite 1s; }
+    @keyframes floatBlob {
+        0%, 100% { transform: translate(0,0) scale(1); }
+        50%       { transform: translate(20px,-25px) scale(1.04); }
+    }
+
+    /* ── Navbar ── */
+    .top-nav {
+        position: sticky; top: 0; z-index: 100;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 14px 40px;
+        background: rgba(10,10,26,0.85);
+        backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .nav-left { display: flex; align-items: center; gap: 20px; }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-brand-icon {
+        width: 34px; height: 34px; border-radius: 9px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .nav-brand-name { font-size: 1.05rem; font-weight: 700; color: #f1f5f9; }
+    .nav-divider { width: 1px; height: 22px; background: rgba(255,255,255,0.12); }
+    .nav-page-title { font-size: 14px; font-weight: 500; color: #94a3b8; }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .nav-pill {
+        display: flex; align-items: center; gap: 6px;
+        padding: 7px 16px; border-radius: 50px; font-size: 13px; font-weight: 500;
+        text-decoration: none; color: #94a3b8;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.04); transition: all 0.2s;
+    }
+    .nav-pill:hover { color: #f1f5f9; background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.18); }
+    .nav-pill.accent { background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.4); color: #a5b4fc; }
+    .nav-pill.accent:hover { background: rgba(99,102,241,0.25); color: #c7d2fe; }
+    .btn-logout-nav {
+        display: flex; align-items: center; gap: 6px;
+        background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.28);
+        color: #fca5a5; border-radius: 50px; padding: 7px 16px;
+        font-size: 13px; font-weight: 500; text-decoration: none; transition: all 0.2s;
+    }
+    .btn-logout-nav:hover { background: rgba(239,68,68,0.25); color: #fecaca; }
+
+    /* ── Layout ── */
+    .page-wrapper { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+    .main-content { max-width: 860px; margin: 0 auto; width: 100%; padding: 36px 20px 60px; flex: 1; }
+
+    /* ── Profile card ── */
+    .profile-card {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.09);
+        border-radius: 22px; overflow: hidden;
+        animation: fadeInUp 0.45s ease both;
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Banner */
+    .profile-banner {
+        height: 160px;
+        background: linear-gradient(135deg, #312e81 0%, #4f46e5 35%, #7c3aed 65%, #0e7490 100%);
+        position: relative;
+    }
+    .profile-banner::after {
+        content: '';
+        position: absolute; inset: 0;
+        background-image: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
+        background-size: 24px 24px;
+    }
+
+    /* Header row */
+    .profile-header {
+        display: flex; align-items: flex-end; justify-content: space-between;
+        padding: 0 28px 20px; gap: 16px; flex-wrap: wrap;
+    }
+    .profile-left { display: flex; align-items: flex-end; gap: 18px; }
+
+    .profile-avatar-img {
+        width: 96px; height: 96px; border-radius: 50%;
+        border: 4px solid #0a0a1a;
+        object-fit: cover;
+        margin-top: -48px; flex-shrink: 0;
+    }
+    .profile-avatar-initials {
+        width: 96px; height: 96px; border-radius: 50%;
+        border: 4px solid #0a0a1a;
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        color: white;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 34px; font-weight: 800;
+        margin-top: -48px; flex-shrink: 0;
+    }
+
+    .profile-identity { padding-bottom: 4px; }
+    .profile-name { font-size: 1.35rem; font-weight: 800; color: #f8fafc; letter-spacing: -0.4px; }
+    .profile-username { font-size: 14px; color: #64748b; margin: 2px 0 8px; }
+    .role-badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 3px 12px; border-radius: 50px;
+        font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .role-admin { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+    .role-user  { background: rgba(99,102,241,0.15);  color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+
+    .profile-actions { padding-bottom: 8px; }
+    .btn-edit-profile {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 9px 22px; border-radius: 50px; font-size: 13px; font-weight: 600;
+        background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.45);
+        color: #a5b4fc; text-decoration: none; transition: all 0.2s;
+    }
+    .btn-edit-profile:hover { background: rgba(99,102,241,0.35); color: #c7d2fe; }
+
+    /* Stats row */
+    .stats-row {
+        display: flex;
+        border-top: 1px solid rgba(255,255,255,0.07);
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .stat-block {
+        flex: 1; text-align: center; padding: 18px 8px;
+        border-right: 1px solid rgba(255,255,255,0.07);
+        transition: background 0.2s;
+    }
+    .stat-block:last-child { border-right: none; }
+    .stat-block:hover { background: rgba(255,255,255,0.04); }
+    .stat-number { font-size: 1.6rem; font-weight: 800; color: #f1f5f9; letter-spacing: -0.5px; }
+    .stat-label  { font-size: 11px; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+    /* Body */
+    .profile-body { padding: 28px; }
+
+    .bio-text {
+        font-size: 15px; color: #94a3b8; line-height: 1.65;
+        margin-bottom: 24px;
+        padding: 16px 20px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 12px;
+        font-style: italic;
+    }
+    .bio-empty {
+        font-size: 14px; color: #475569; font-style: italic; margin-bottom: 24px;
+    }
+    .bio-empty a { color: #818cf8; text-decoration: none; }
+    .bio-empty a:hover { color: #a5b4fc; }
+
+    /* About grid */
+    .about-grid {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: 10px; margin-bottom: 28px;
+    }
+    .about-item {
+        display: flex; align-items: center; gap: 10px;
+        font-size: 14px; color: #94a3b8;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 10px; padding: 10px 14px;
+    }
+    .about-icon {
+        width: 30px; height: 30px; border-radius: 8px;
+        background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.2);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 14px; flex-shrink: 0;
+    }
+    .about-item a { color: #818cf8; text-decoration: none; word-break: break-all; }
+    .about-item a:hover { color: #a5b4fc; }
+
+    /* Section title */
+    .section-title {
+        font-size: 13px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.7px; color: #64748b;
+        display: flex; align-items: center; gap: 10px;
+        margin-bottom: 16px;
+    }
+    .section-title::after {
+        content: ''; flex: 1; height: 1px;
+        background: rgba(255,255,255,0.07);
+    }
+
+    /* Mini post cards */
+    .posts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+    .mini-post-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px; padding: 14px 16px;
+        transition: all 0.2s; cursor: default;
+    }
+    .mini-post-card:hover {
+        background: rgba(255,255,255,0.07);
+        border-color: rgba(255,255,255,0.15);
+        transform: translateY(-2px);
+    }
+    .mini-post-title { font-size: 14px; font-weight: 600; color: #e2e8f0; margin-bottom: 5px; line-height: 1.4; }
+    .mini-post-date  { font-size: 12px; color: #475569; margin-bottom: 8px; }
+    .mini-badge {
+        display: inline-flex; align-items: center;
+        padding: 2px 10px; border-radius: 50px;
+        font-size: 11px; font-weight: 600;
+    }
+    .mini-approved { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.25); }
+    .mini-pending  { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+    .mini-rejected { background: rgba(239,68,68,0.15);  color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+
+    .no-posts { font-size: 14px; color: #475569; font-style: italic; }
+
+    /* Footer */
+    .page-footer {
+        text-align: center; padding: 20px; font-size: 13px; color: #334155;
+        border-top: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 1;
+    }
+
+    @media (max-width: 640px) {
+        .top-nav { padding: 12px 16px; }
+        .nav-page-title, .nav-divider { display: none; }
+        .main-content { padding: 24px 12px 48px; }
+        .profile-header { padding: 0 16px 16px; }
+        .profile-body { padding: 18px; }
+        .about-grid { grid-template-columns: 1fr; }
+        .nav-pill:not(.accent) { display: none; }
+    }
+</style>
+</head>
+<body>
+
+<div class="bg-gradient"></div>
+<div class="dot-pattern"></div>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<div class="page-wrapper">
+
+    <!-- ── Navbar ── -->
+    <nav class="top-nav">
+        <div class="nav-left">
+            <a href="/home" class="nav-brand">
+                <div class="nav-brand-icon">🌱</div>
+                <span class="nav-brand-name">SpringFeeds</span>
+            </a>
+            <div class="nav-divider"></div>
+            <span class="nav-page-title">Profile</span>
+        </div>
+        <div class="nav-right">
+            <a href="/viewPosts" class="nav-pill">📋 My Posts</a>
+            <a href="/viewOtherUsersPosts" class="nav-pill">🌐 Explore</a>
+            <a th:if="${isOwnProfile}" href="/profile/edit" class="nav-pill accent">✏️ Edit Profile</a>
+            <a href="/logout" class="btn-logout-nav">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Sign Out
+            </a>
+        </div>
+    </nav>
+
+    <!-- ── Main ── -->
+    <div class="main-content">
+        <div class="profile-card">
+
+            <!-- Banner -->
+            <div class="profile-banner"></div>
+
+            <!-- Header -->
+            <div class="profile-header">
+                <div class="profile-left">
+                    <!-- Avatar -->
+                    <img th:if="${profileUser.profilePictureUrl != null and !#strings.isEmpty(profileUser.profilePictureUrl)}"
+                         class="profile-avatar-img"
+                         th:src="${profileUser.profilePictureUrl}" alt="Profile Picture" />
+                    <div th:if="${profileUser.profilePictureUrl == null or #strings.isEmpty(profileUser.profilePictureUrl)}"
+                         class="profile-avatar-initials"
+                         th:text="${profileInitials}">U</div>
+
+                    <div class="profile-identity">
+                        <div class="profile-name" th:text="${profileUser.name}">Full Name</div>
+                        <div class="profile-username" th:text="|@${profileUser.userName}|">@username</div>
+                        <span class="role-badge"
+                              th:classappend="${profileUser.role == 'ADMIN'} ? 'role-admin' : 'role-user'"
+                              th:text="${profileUser.role}">USER</span>
+                    </div>
+                </div>
+
+                <div class="profile-actions" th:if="${isOwnProfile}">
+                    <a href="/profile/edit" class="btn-edit-profile">✏️ Edit Profile</a>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-row">
+                <div class="stat-block">
+                    <div class="stat-number" th:text="${postCount}">0</div>
+                    <div class="stat-label">Posts</div>
+                </div>
+                <div class="stat-block">
+                    <div class="stat-number" th:text="${likesReceived}">0</div>
+                    <div class="stat-label">Likes Received</div>
+                </div>
+                <div class="stat-block">
+                    <div class="stat-number" th:text="${commentsReceived}">0</div>
+                    <div class="stat-label">Comments Received</div>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="profile-body">
+
+                <!-- Bio -->
+                <p class="bio-text"
+                   th:if="${profileUser.bio != null and !#strings.isEmpty(profileUser.bio)}"
+                   th:text="${profileUser.bio}"></p>
+                <p class="bio-empty"
+                   th:if="${(profileUser.bio == null or #strings.isEmpty(profileUser.bio)) and isOwnProfile}">
+                    No bio yet. <a href="/profile/edit">Add one →</a>
+                </p>
+
+                <!-- About grid -->
+                <div class="about-grid">
+                    <div class="about-item"
+                         th:if="${profileUser.location != null and !#strings.isEmpty(profileUser.location)}">
+                        <div class="about-icon">📍</div>
+                        <span th:text="${profileUser.location}"></span>
+                    </div>
+                    <div class="about-item"
+                         th:if="${profileUser.website != null and !#strings.isEmpty(profileUser.website)}">
+                        <div class="about-icon">🔗</div>
+                        <a th:href="${profileUser.website}" target="_blank" rel="noopener"
+                           th:text="${profileUser.website}"></a>
+                    </div>
+                    <div class="about-item"
+                         th:if="${profileUser.gender != null and !#strings.isEmpty(profileUser.gender)}">
+                        <div class="about-icon">👤</div>
+                        <span th:text="${profileUser.gender}"></span>
+                    </div>
+                    <div class="about-item" th:if="${profileUser.dateOfBirth != null}">
+                        <div class="about-icon">🎂</div>
+                        <span th:text="${#temporals.format(profileUser.dateOfBirth, 'dd MMM yyyy')}"></span>
+                    </div>
+                    <div class="about-item"
+                         th:if="${profileUser.contactNumber != null and !#strings.isEmpty(profileUser.contactNumber) and isOwnProfile}">
+                        <div class="about-icon">📞</div>
+                        <span th:text="${profileUser.contactNumber}"></span>
+                    </div>
+                    <div class="about-item" th:if="${profileUser.joinedDate != null}">
+                        <div class="about-icon">📅</div>
+                        <span>Joined <span th:text="${#temporals.format(profileUser.joinedDate, 'MMM yyyy')}"></span></span>
+                    </div>
+                </div>
+
+                <!-- Recent posts -->
+                <div th:if="${!#lists.isEmpty(recentPosts)}">
+                    <div class="section-title">Recent Posts</div>
+                    <div class="posts-grid">
+                        <div th:each="post : ${recentPosts}" class="mini-post-card">
+                            <div class="mini-post-title" th:text="${post.title}">Title</div>
+                            <div class="mini-post-date"
+                                 th:text="${#dates.format(post.createdDate,'dd MMM yyyy')}"></div>
+                            <span class="mini-badge"
+                                  th:classappend="${post.status == 'Approved' ? 'mini-approved' : (post.status == 'Rejected' ? 'mini-rejected' : 'mini-pending')}"
+                                  th:text="${(post.status != null and !#strings.isEmpty(post.status)) ? post.status : 'Pending'}">
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <p class="no-posts" th:if="${#lists.isEmpty(recentPosts)}">No posts yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="page-footer">SpringFeeds &nbsp;·&nbsp; Built with Spring Boot &amp; Thymeleaf</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

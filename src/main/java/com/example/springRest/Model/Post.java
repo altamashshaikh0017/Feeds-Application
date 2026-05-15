@@ -1,9 +1,5 @@
 package com.example.springRest.Model;
 
-import java.sql.Date;
-
-import com.example.springRest.Entity.User;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -23,8 +19,11 @@ public class Post {
 @GeneratedValue(strategy = GenerationType.IDENTITY)
 private Long pkPostId;
 private String title;
+
+@Column(columnDefinition = "TEXT")
 private String content;
-private boolean isApproved = false;
+
+private String status;
 
 @Temporal(TemporalType.TIMESTAMP)
 private java.util.Date createdDate;
@@ -32,4 +31,6 @@ private java.util.Date createdDate;
 @ManyToOne(fetch = FetchType.LAZY)
 @JoinColumn(name = "author_Id")
 private Admin author;
+
+private String coverImageUrl;
 }

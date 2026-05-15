@@ -11,4 +11,6 @@ import com.example.springRest.Model.Admin;
 public interface AdminRepository extends JpaRepository<Admin, Long> {
 
 	Optional<Admin> findByUserName(String username);
+	
+	Optional<Admin> findByEmail(String email);
 }

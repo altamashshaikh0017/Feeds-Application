@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit Profile</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, #0a0a0f 0%, #0d0d1a 30%, #0a0f1a 60%, #0a0a0f 100%);
+        min-height: 100vh;
+        color: #fff;
+        overflow-x: hidden;
+    }
+
+    /* ── Animated blobs ── */
+    .blob {
+        position: fixed; border-radius: 50%; filter: blur(80px);
+        opacity: 0.18; pointer-events: none; z-index: 0;
+        animation: drift 18s ease-in-out infinite alternate;
+    }
+    .blob-1 { width: 560px; height: 560px; background: #6366f1; top: -140px; left: -140px; animation-delay: 0s; }
+    .blob-2 { width: 420px; height: 420px; background: #8b5cf6; bottom: -100px; right: -100px; animation-delay: -7s; }
+    .blob-3 { width: 320px; height: 320px; background: #06b6d4; top: 40%; left: 55%; animation-delay: -13s; }
+    @keyframes drift {
+        0%   { transform: translate(0, 0) scale(1); }
+        100% { transform: translate(40px, 30px) scale(1.08); }
+    }
+
+    /* dot pattern */
+    body::before {
+        content: '';
+        position: fixed; inset: 0; z-index: 0; pointer-events: none;
+        background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+        background-size: 28px 28px;
+    }
+
+    /* ── Navbar ── */
+    .glass-nav {
+        position: sticky; top: 0; z-index: 100;
+        background: rgba(10,10,20,0.75);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+        padding: 0 24px;
+        height: 60px;
+        display: flex; align-items: center; gap: 12px;
+    }
+    .nav-brand {
+        font-size: 1.1rem; font-weight: 800;
+        background: linear-gradient(135deg, #818cf8, #c084fc);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-decoration: none; white-space: nowrap;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .nav-brand-icon {
+        width: 30px; height: 30px; border-radius: 8px;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 15px;
+    }
+    .nav-label {
+        font-size: 0.85rem; font-weight: 600; color: rgba(255,255,255,0.45);
+        letter-spacing: 0.3px; white-space: nowrap;
+    }
+    .nav-sep { color: rgba(255,255,255,0.15); font-size: 1.2rem; }
+    .nav-link-pill {
+        font-size: 0.78rem; font-weight: 600; color: rgba(255,255,255,0.55);
+        text-decoration: none; padding: 5px 12px; border-radius: 20px;
+        border: 1px solid rgba(255,255,255,0.1);
+        transition: all 0.2s; white-space: nowrap;
+    }
+    .nav-link-pill:hover { color: #fff; background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+    .nav-spacer { flex: 1; }
+    .user-pill {
+        display: flex; align-items: center; gap: 8px;
+        background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 24px; padding: 4px 12px 4px 4px;
+    }
+    .user-pill-avatar {
+        width: 28px; height: 28px; border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 11px; font-weight: 700; color: #fff;
+        flex-shrink: 0; overflow: hidden;
+    }
+    .user-pill-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .user-pill-name { font-size: 0.78rem; font-weight: 600; color: rgba(255,255,255,0.8); }
+    .btn-logout {
+        font-size: 0.78rem; font-weight: 600; color: rgba(255,100,100,0.8);
+        text-decoration: none; padding: 5px 12px; border-radius: 20px;
+        border: 1px solid rgba(255,100,100,0.2);
+        transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-logout:hover { color: #fff; background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); }
+
+    /* ── Page wrapper ── */
+    .page-wrapper {
+        position: relative; z-index: 1;
+        max-width: 700px; margin: 0 auto;
+        padding: 36px 20px 60px;
+    }
+
+    /* ── Glass card ── */
+    .glass-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.09);
+        backdrop-filter: blur(24px);
+        border-radius: 20px;
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+
+    /* ── Card header ── */
+    .card-header-band {
+        background: linear-gradient(135deg, rgba(99,102,241,0.35) 0%, rgba(139,92,246,0.25) 60%, rgba(6,182,212,0.15) 100%);
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        padding: 22px 28px;
+        display: flex; align-items: center; gap: 16px;
+    }
+    .header-avatar {
+        width: 64px; height: 64px; border-radius: 50%;
+        border: 2px solid rgba(255,255,255,0.2);
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 24px; font-weight: 800; color: #fff;
+        flex-shrink: 0; overflow: hidden;
+    }
+    .header-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .header-name { font-size: 1.1rem; font-weight: 700; color: #fff; }
+    .header-username { font-size: 0.82rem; color: rgba(255,255,255,0.45); margin-top: 2px; }
+
+    /* ── Card body ── */
+    .card-body-pad { padding: 28px; }
+
+    /* ── Section title ── */
+    .section-title {
+        font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 1.2px; color: rgba(255,255,255,0.35);
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.07);
+        margin-bottom: 20px;
+    }
+
+    /* ── Divider ── */
+    .section-divider {
+        border: none; border-top: 1px solid rgba(255,255,255,0.07);
+        margin: 32px 0;
+    }
+
+    /* ── Form controls ── */
+    .form-label {
+        font-size: 0.8rem; font-weight: 600; color: rgba(255,255,255,0.6);
+        margin-bottom: 6px; display: block;
+    }
+    .form-control, .form-select {
+        background: rgba(255,255,255,0.05) !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+        border-radius: 10px !important;
+        color: #fff !important;
+        font-size: 0.88rem;
+        padding: 10px 14px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-control::placeholder { color: rgba(255,255,255,0.25) !important; }
+    .form-control:focus, .form-select:focus {
+        border-color: rgba(99,102,241,0.6) !important;
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.15) !important;
+        outline: none;
+        background: rgba(255,255,255,0.07) !important;
+    }
+    .form-select option { background: #1a1a2e; color: #fff; }
+    textarea.form-control { resize: vertical; min-height: 90px; }
+
+    /* calendar icon color fix */
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); cursor: pointer; }
+
+    .form-hint { font-size: 0.74rem; color: rgba(255,255,255,0.3); margin-top: 4px; }
+
+    /* ── Alerts ── */
+    .alert-glass {
+        border-radius: 10px; font-size: 0.84rem; font-weight: 500;
+        padding: 12px 16px; margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+    }
+    .alert-success-glass {
+        background: rgba(34,197,94,0.12);
+        border: 1px solid rgba(34,197,94,0.3);
+        color: #4ade80;
+    }
+    .alert-error-glass {
+        background: rgba(239,68,68,0.12);
+        border: 1px solid rgba(239,68,68,0.3);
+        color: #f87171;
+    }
+
+    /* ── Profile picture upload ── */
+    .pic-upload-area {
+        border: 2px dashed rgba(99,102,241,0.35);
+        border-radius: 14px;
+        padding: 22px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s;
+        position: relative;
+    }
+    .pic-upload-area:hover, .pic-upload-area.dragover {
+        border-color: rgba(99,102,241,0.7);
+        background: rgba(99,102,241,0.06);
+    }
+    .pic-upload-area input[type="file"] {
+        position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .pic-preview-wrap {
+        display: flex; align-items: center; gap: 18px; flex-wrap: wrap; justify-content: center;
+    }
+    .pic-preview-circle {
+        width: 80px; height: 80px; border-radius: 50%;
+        border: 2px solid rgba(255,255,255,0.15);
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        overflow: hidden; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 26px; font-weight: 800; color: #fff;
+    }
+    .pic-preview-circle img { width: 100%; height: 100%; object-fit: cover; }
+    .pic-upload-text { font-size: 0.82rem; color: rgba(255,255,255,0.45); }
+    .pic-upload-text strong { color: rgba(99,102,241,0.9); }
+    .pic-upload-text .pic-filename { font-size: 0.78rem; color: #a5b4fc; margin-top: 4px; display: none; }
+    .btn-remove-pic {
+        font-size: 0.72rem; color: #f87171; background: none; border: none;
+        cursor: pointer; padding: 0; text-decoration: underline; display: none;
+    }
+
+    /* ── Mismatch hint ── */
+    .pw-hint { font-size: 0.76rem; color: #f87171; margin-top: 5px; display: none; }
+
+    /* ── Buttons ── */
+    .btn-gradient {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        color: #fff; border: none; font-weight: 700;
+        font-size: 0.85rem; border-radius: 10px;
+        padding: 10px 26px; cursor: pointer;
+        transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+        box-shadow: 0 4px 14px rgba(99,102,241,0.3);
+        letter-spacing: 0.3px;
+    }
+    .btn-gradient:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.4); }
+    .btn-gradient:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* fade-in */
+    .fade-in { animation: fadeUp 0.5s ease both; }
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(18px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Save loader overlay ── */
+    .save-overlay {
+        display: none;
+        position: fixed; inset: 0; z-index: 999;
+        background: rgba(10,10,20,0.65);
+        backdrop-filter: blur(6px);
+        align-items: center; justify-content: center;
+        flex-direction: column; gap: 18px;
+    }
+    .save-overlay.active { display: flex; }
+    .save-spinner {
+        width: 48px; height: 48px; border-radius: 50%;
+        border: 4px solid rgba(255,255,255,0.1);
+        border-top-color: #818cf8;
+        animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .save-overlay-text {
+        font-size: 0.9rem; font-weight: 600;
+        color: rgba(255,255,255,0.7); letter-spacing: 0.3px;
+    }
+</style>
+</head>
+<body>
+
+<!-- ── Save loader overlay ── -->
+<div class="save-overlay" id="saveOverlay">
+    <div class="save-spinner"></div>
+    <div class="save-overlay-text">Saving changes…</div>
+</div>
+
+<!-- blobs -->
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<!-- ── Navbar ── -->
+<nav class="glass-nav">
+    <a href="/home" class="nav-brand">
+        <div class="nav-brand-icon">✦</div>
+        Feeds
+    </a>
+    <span class="nav-sep">/</span>
+    <span class="nav-label">Edit Profile</span>
+
+    <div class="nav-spacer"></div>
+
+    <a href="/profile" class="nav-link-pill">← My Profile</a>
+    <a href="/viewPosts" class="nav-link-pill">My Posts</a>
+
+    <div class="user-pill">
+        <div class="user-pill-avatar">
+            <img th:if="${profileUser.profilePictureUrl != null and !#strings.isEmpty(profileUser.profilePictureUrl)}"
+                 th:src="${profileUser.profilePictureUrl}" alt="avatar" />
+            <span th:if="${profileUser.profilePictureUrl == null or #strings.isEmpty(profileUser.profilePictureUrl)}"
+                  th:text="${profileInitials}">U</span>
+        </div>
+        <span class="user-pill-name" th:text="${profileUser.name}">Name</span>
+    </div>
+
+    <a href="/logout" class="btn-logout">Sign out</a>
+</nav>
+
+<!-- ── Page content ── -->
+<div class="page-wrapper">
+
+    <!-- ── Edit Profile Card ── -->
+    <div class="glass-card fade-in">
+
+        <!-- Header -->
+        <div class="card-header-band">
+            <div class="header-avatar">
+                <img th:if="${profileUser.profilePictureUrl != null and !#strings.isEmpty(profileUser.profilePictureUrl)}"
+                     th:src="${profileUser.profilePictureUrl}" alt="Avatar" />
+                <span th:if="${profileUser.profilePictureUrl == null or #strings.isEmpty(profileUser.profilePictureUrl)}"
+                      th:text="${profileInitials}">U</span>
+            </div>
+            <div>
+                <div class="header-name" th:text="${profileUser.name}">Name</div>
+                <div class="header-username" th:text="|@${profileUser.userName}|">@username</div>
+            </div>
+        </div>
+
+        <div class="card-body-pad">
+
+            <!-- Flash messages -->
+            <div th:if="${message}"   class="alert-glass alert-success-glass" th:text="${message}"></div>
+            <div th:if="${error}"     class="alert-glass alert-error-glass"   th:text="${error}"></div>
+            <div th:if="${pwMessage}" class="alert-glass alert-success-glass" th:text="${pwMessage}"></div>
+            <div th:if="${pwError}"   class="alert-glass alert-error-glass"   th:text="${pwError}"></div>
+
+            <!-- ── Profile Info Form ── -->
+            <form th:action="@{/profile/edit}" th:object="${req}" method="post" enctype="multipart/form-data">
+
+                <div class="section-title">Profile Information</div>
+
+                <div class="mb-3">
+                    <label class="form-label">Display Name</label>
+                    <input type="text" class="form-control" th:field="*{name}" placeholder="Your full name" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Bio</label>
+                    <textarea class="form-control" th:field="*{bio}" rows="3"
+                              placeholder="Tell people a little about yourself…" maxlength="300"></textarea>
+                    <div class="form-hint">Max 300 characters.</div>
+                </div>
+
+                <!-- hidden field keeps the existing URL if no new file is chosen -->
+                <input type="hidden" th:field="*{profilePictureUrl}" id="profilePictureUrl" />
+
+                <div class="mb-3">
+                    <label class="form-label">Profile Picture</label>
+                    <div class="pic-upload-area" id="picUploadArea">
+                        <input type="file" name="profilePicture" id="profilePictureFile"
+                               accept="image/*" />
+                        <div class="pic-preview-wrap">
+                            <div class="pic-preview-circle" id="picPreviewCircle">
+                                <img th:if="${profileUser.profilePictureUrl != null and !#strings.isEmpty(profileUser.profilePictureUrl)}"
+                                     th:src="${profileUser.profilePictureUrl}" id="picPreviewImg" alt="avatar" />
+                                <span th:if="${profileUser.profilePictureUrl == null or #strings.isEmpty(profileUser.profilePictureUrl)}"
+                                      id="picPreviewInitials" th:text="${profileInitials}">U</span>
+                            </div>
+                            <div class="pic-upload-text">
+                                <div><strong>Click or drag &amp; drop</strong> to upload a new photo</div>
+                                <div>JPG, PNG, GIF, WEBP · max 5 MB</div>
+                                <div class="pic-filename" id="picFilename"></div>
+                                <button type="button" class="btn-remove-pic" id="btnRemovePic">Remove photo</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Website</label>
+                    <input type="url" class="form-control" th:field="*{website}"
+                           placeholder="https://yourwebsite.com" />
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Location</label>
+                        <input type="text" class="form-control" th:field="*{location}"
+                               placeholder="City, Country" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Gender</label>
+                        <select class="form-select" th:field="*{gender}">
+                            <option value="">Prefer not to say</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Non-binary">Non-binary</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Date of Birth</label>
+                        <input type="date" class="form-control" th:field="*{dateOfBirth}" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Contact Number</label>
+                        <input type="text" class="form-control" th:field="*{contactNumber}"
+                               placeholder="+1 234 567 8900" />
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn-gradient" id="saveBtn">Save Changes</button>
+                </div>
+            </form>
+
+            <hr class="section-divider" />
+
+            <!-- ── Change Password Form ── -->
+            <form th:action="@{/profile/changePassword}" method="post">
+
+                <div class="section-title">Change Password</div>
+
+                <div class="mb-3">
+                    <label class="form-label">Current Password</label>
+                    <input type="password" class="form-control" name="currentPassword"
+                           placeholder="Enter your current password" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">New Password</label>
+                    <input type="password" class="form-control" name="newPassword" id="newPassword"
+                           placeholder="At least 6 characters" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Confirm New Password</label>
+                    <input type="password" class="form-control" name="confirmPassword" id="confirmPassword"
+                           placeholder="Re-enter new password" />
+                    <div class="pw-hint" id="pw-mismatch">Passwords do not match.</div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn-gradient" id="pw-submit-btn">Change Password</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    /* ── Save loader ── */
+    document.getElementById('saveBtn').closest('form').addEventListener('submit', () => {
+        document.getElementById('saveOverlay').classList.add('active');
+    });
+
+    /* ── Password match check ── */
+    const newPw  = document.getElementById('newPassword');
+    const confPw = document.getElementById('confirmPassword');
+    const hint   = document.getElementById('pw-mismatch');
+    const pwBtn  = document.getElementById('pw-submit-btn');
+
+    function checkMatch() {
+        const mismatch = confPw.value.length > 0 && newPw.value !== confPw.value;
+        hint.style.display = mismatch ? 'block' : 'none';
+        pwBtn.disabled = mismatch;
+    }
+    newPw.addEventListener('input',  checkMatch);
+    confPw.addEventListener('input', checkMatch);
+
+    /* ── Profile picture upload preview ── */
+    const fileInput     = document.getElementById('profilePictureFile');
+    const area          = document.getElementById('picUploadArea');
+    const previewCircle = document.getElementById('picPreviewCircle');
+    const filenameEl    = document.getElementById('picFilename');
+    const removeBtn     = document.getElementById('btnRemovePic');
+    const urlHidden     = document.getElementById('profilePictureUrl');
+
+    function applyPreview(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File is too large. Please choose an image under 5 MB.');
+            fileInput.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = e => {
+            previewCircle.innerHTML = `<img src="${e.target.result}" alt="preview" style="width:100%;height:100%;object-fit:cover;" />`;
+        };
+        reader.readAsDataURL(file);
+        filenameEl.textContent = file.name;
+        filenameEl.style.display = 'block';
+        removeBtn.style.display  = 'inline-block';
+    }
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files[0]) applyPreview(fileInput.files[0]);
+    });
+
+    removeBtn.addEventListener('click', () => {
+        fileInput.value   = '';
+        urlHidden.value   = '';
+        filenameEl.style.display = 'none';
+        removeBtn.style.display  = 'none';
+        previewCircle.innerHTML  = '<span>?</span>';
+    });
+
+    /* drag-and-drop */
+    area.addEventListener('dragover',  e => { e.preventDefault(); area.classList.add('dragover'); });
+    area.addEventListener('dragleave', () => area.classList.remove('dragover'));
+    area.addEventListener('drop', e => {
+        e.preventDefault();
+        area.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            fileInput.files = dt.files;
+            applyPreview(file);
+        }
+    });
+</script>
+</body>
+</html>
